@@ -1,5 +1,7 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 
 class Tag(models.Model):
@@ -33,7 +35,7 @@ class RecipeTag(models.Model):
     recipe = models.ForeignKey('Recipe', on_delete=models.CASCADE,
                                verbose_name='Рецепт')
     tag = models.ForeignKey(Tag, on_delete=models.CASCADE,
-                            erbose_name='Тег')
+                            verbose_name='Тег')
 
     class Meta:
         unique_together = ('recipe', 'tag')
@@ -43,7 +45,7 @@ class RecipeTag(models.Model):
 
 class RecipeIngredient(models.Model):
     recipe = models.ForeignKey('Recipe', on_delete=models.CASCADE,
-                               erbose_name='Рецепт')
+                               verbose_name='Рецепт')
     ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE,
                                    verbose_name='Ингредиент')
     amount = models.PositiveIntegerField(verbose_name='Количество')
