@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
+from djoser.serializers import UserCreateSerializer
 
 from .models import Recipe, Ingredient, Tag
 
@@ -36,3 +37,14 @@ class RecipesSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
         fields = '__all__'
+
+
+class UserCreateSerializer(UserCreateSerializer):
+    class Meta(UserCreateSerializer.Meta):
+        model = User
+        fields = ('id', 'email', 'username', 'password', 'first_name',
+                  'last_name')
+
+
+class AuthTokenSerializer(serializers.Serializer):
+
