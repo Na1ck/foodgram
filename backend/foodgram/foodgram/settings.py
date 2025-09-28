@@ -138,9 +138,11 @@ REST_FRAMEWORK = {
 
 DJOSER = {
     'PERMISSIONS': {
-        'user': ['rest_framework.permissions.IsAuthenticated'],
-        'user_list': ['rest_framework.permissions.AllowAny'],
-    }
+        'token_create': ['rest_framework.permissions.AllowAny'],
+    },
+    'SERIALIZERS': {
+        'token_create': 'api.serializers.AuthTokenSerializer',
+    },
 }
 
 AUTH_USER_MODEL = 'users.User'

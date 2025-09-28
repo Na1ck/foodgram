@@ -47,4 +47,19 @@ class UserCreateSerializer(UserCreateSerializer):
 
 
 class AuthTokenSerializer(serializers.Serializer):
+    email = serializers.EmailField()
 
+    def validate(self, attrs):
+        User = get_user_model()
+
+        try:
+            user = User.objects.get(email=attrs['email'])
+            print(user.check_password('testpass123'))
+            if not user.is_active:
+                raise serializers.ValidationError("User is inactive")
+
+            attrs['user'] = user
+            return attrs
+
+        except User.DoesNotExist:
+            raise serializers.ValidationError("Invalid credentials 2")
