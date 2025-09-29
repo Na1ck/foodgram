@@ -3,7 +3,8 @@ from rest_framework import serializers
 from djoser.serializers import UserCreateSerializer
 
 
-from .models import Recipe, Ingredient, RecipeIngredient, Tag, Favorite
+from .models import (Recipe, Ingredient, RecipeIngredient, Tag, Favorite,
+                     ShoppingCart)
 
 User = get_user_model()
 
@@ -58,6 +59,7 @@ class RecipesSerializer(serializers.ModelSerializer):
     )
     image = serializers.ImageField(required=False)
     is_favorited = serializers.SerializerMethodField()
+    is_in_shopping_cart = serializers.SerializerMethodField()
     name = serializers.CharField(max_length=256, required=True)
     text = serializers.CharField(max_length=None, required=True)
     cooking_time = serializers.IntegerField(required=True)
@@ -77,6 +79,13 @@ class RecipesSerializer(serializers.ModelSerializer):
         if request and request.user.is_authenticated:
             return Favorite.objects.filter(user=request.user,
                                            recipe=obj).exists()
+        return False
+
+    def get_is_in_shopping_cart(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return ShoppingCart.objects.filter(user=request.user,
+                                               recipe=obj).exists()
         return False
 
     def create(self, validated_data):

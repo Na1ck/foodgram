@@ -10,7 +10,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated
 
 from users.models import User
-from .models import Recipe, Tag, Ingredient, Favorite
+from .models import Recipe, Tag, Ingredient, Favorite, ShoppingCart
 from .serializers import (RecipesSerializer,
                           ShortRecipeSerializer,
                           TagSerializer,
@@ -38,7 +38,6 @@ class RecipesView(ListModelMixin, RetrieveModelMixin,
         recipe = self.get_object()
 
         if request.method == 'POST':
-            # Проверяем, не добавлен ли уже рецепт
             if Favorite.objects.filter(user=request.user,
                                        recipe=recipe).exists():
                 return Response(
@@ -52,7 +51,6 @@ class RecipesView(ListModelMixin, RetrieveModelMixin,
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         elif request.method == 'DELETE':
-            # Проверяем, есть ли рецепт в избранном
             favorite = Favorite.objects.filter(user=request.user,
                                                recipe=recipe)
             if not favorite.exists():
@@ -64,6 +62,42 @@ class RecipesView(ListModelMixin, RetrieveModelMixin,
             favorite.delete()
             return Response(
                 {"detail": "Рецепт удален из избранного."},
+                status=status.HTTP_204_NO_CONTENT
+            )
+
+    @action(detail=True, methods=['post', 'delete'],
+            permission_classes=[IsAuthenticated])
+    def shopping_cart(self, request, pk=None):
+        """
+        Добавление/удаление рецепта в список покупок
+        """
+        recipe = self.get_object()
+
+        if request.method == 'POST':
+            if ShoppingCart.objects.filter(user=request.user,
+                                           recipe=recipe).exists():
+                return Response(
+                    {"detail": "Рецепт уже в списке покупок."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            ShoppingCart.objects.create(user=request.user, recipe=recipe)
+            serializer = ShortRecipeSerializer(recipe,
+                                               context={'request': request})
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        elif request.method == 'DELETE':
+            favorite = ShoppingCart.objects.filter(user=request.user,
+                                                   recipe=recipe)
+            if not favorite.exists():
+                return Response(
+                    {"detail": "Рецепт не был в списке покупок."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            favorite.delete()
+            return Response(
+                {"detail": "Рецепт удален из списка покупок."},
                 status=status.HTTP_204_NO_CONTENT
             )
 
