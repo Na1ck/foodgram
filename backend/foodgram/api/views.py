@@ -1,27 +1,71 @@
 from rest_framework import viewsets
+from rest_framework import status
 from rest_framework.mixins import (ListModelMixin, CreateModelMixin,
-                                   RetrieveModelMixin)
+                                   RetrieveModelMixin, UpdateModelMixin,
+                                   DestroyModelMixin)
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated
 
 from users.models import User
-from .models import Recipe, Tag, Ingredient
+from .models import Recipe, Tag, Ingredient, Favorite
 from .serializers import (RecipesSerializer,
+                          ShortRecipeSerializer,
                           TagSerializer,
                           RecipeIngredientReadSerializer,
                           UserSerializer, AuthTokenSerializer)
 
 
 class RecipesView(ListModelMixin, RetrieveModelMixin,
-                  CreateModelMixin, viewsets.GenericViewSet):
+                  CreateModelMixin, UpdateModelMixin,
+                  DestroyModelMixin,
+                  viewsets.GenericViewSet):
     queryset = Recipe.objects.all()
     permission_classes = [IsAuthenticated]
     serializer_class = RecipesSerializer
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
+
+    @action(detail=True, methods=['post', 'delete'],
+            permission_classes=[IsAuthenticated])
+    def favorite(self, request, pk=None):
+        """
+        Добавление/удаление рецепта в избранное
+        """
+        recipe = self.get_object()
+
+        if request.method == 'POST':
+            # Проверяем, не добавлен ли уже рецепт
+            if Favorite.objects.filter(user=request.user,
+                                       recipe=recipe).exists():
+                return Response(
+                    {"detail": "Рецепт уже в избранном."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            Favorite.objects.create(user=request.user, recipe=recipe)
+            serializer = ShortRecipeSerializer(recipe,
+                                               context={'request': request})
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        elif request.method == 'DELETE':
+            # Проверяем, есть ли рецепт в избранном
+            favorite = Favorite.objects.filter(user=request.user,
+                                               recipe=recipe)
+            if not favorite.exists():
+                return Response(
+                    {"detail": "Рецепт не был в избранном."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            favorite.delete()
+            return Response(
+                {"detail": "Рецепт удален из избранного."},
+                status=status.HTTP_204_NO_CONTENT
+            )
 
 
 class TagsView(ListModelMixin, RetrieveModelMixin, viewsets.GenericViewSet):

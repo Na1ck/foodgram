@@ -3,7 +3,7 @@ from rest_framework import serializers
 from djoser.serializers import UserCreateSerializer
 
 
-from .models import Recipe, Ingredient, RecipeIngredient, Tag
+from .models import Recipe, Ingredient, RecipeIngredient, Tag, Favorite
 
 User = get_user_model()
 
@@ -57,6 +57,7 @@ class RecipesSerializer(serializers.ModelSerializer):
         required=False
     )
     image = serializers.ImageField(required=False)
+    is_favorited = serializers.SerializerMethodField()
     name = serializers.CharField(max_length=256, required=True)
     text = serializers.CharField(max_length=None, required=True)
     cooking_time = serializers.IntegerField(required=True)
@@ -67,6 +68,16 @@ class RecipesSerializer(serializers.ModelSerializer):
         fields = ('id', 'tags', 'author', 'ingredients', 'is_favorited',
                   'is_in_shopping_cart', 'name', 'image', 'text',
                   'cooking_time')
+
+    def get_is_favorited(self, obj):
+        """
+        Возвращает True, если текущий пользователь добавил рецепт в избранное
+        """
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return Favorite.objects.filter(user=request.user,
+                                           recipe=obj).exists()
+        return False
 
     def create(self, validated_data):
         ingredients_data = self.initial_data.get("ingredients", [])
@@ -84,6 +95,29 @@ class RecipesSerializer(serializers.ModelSerializer):
 
         return recipe
 
+    def update(self, instance, validated_data):
+        ingredients_data = self.initial_data.get("ingredients", [])
+        tags_data = validated_data.pop("tags", None)
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+
+        if tags_data is not None:
+            instance.tags.set(tags_data)
+
+        if ingredients_data:
+            RecipeIngredient.objects.filter(recipe=instance).delete()
+
+            for ing in ingredients_data:
+                RecipeIngredient.objects.create(
+                    recipe=instance,
+                    ingredient_id=ing["id"],
+                    amount=ing["amount"]
+                )
+
+        return instance
+
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         representation["tags"] = TagSerializer(instance.tags.all(),
@@ -95,6 +129,12 @@ class RecipesSerializer(serializers.ModelSerializer):
         ).data
 
         return representation
+
+
+class ShortRecipeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Recipe
+        fields = ('id', 'name', 'image', 'cooking_time')
 
 
 class UserCreateSerializer(UserCreateSerializer):
