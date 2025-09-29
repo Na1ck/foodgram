@@ -4,22 +4,35 @@ from rest_framework.mixins import (ListModelMixin, CreateModelMixin,
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.permissions import IsAuthenticated
 
 from users.models import User
-from .models import Recipe, Tag
-from .serializers import (RecipesSerializer, TagSerializer,
+from .models import Recipe, Tag, Ingredient
+from .serializers import (RecipesSerializer,
+                          TagSerializer,
+                          RecipeIngredientReadSerializer,
                           UserSerializer, AuthTokenSerializer)
 
 
 class RecipesView(ListModelMixin, RetrieveModelMixin,
                   CreateModelMixin, viewsets.GenericViewSet):
     queryset = Recipe.objects.all()
+    permission_classes = [IsAuthenticated]
     serializer_class = RecipesSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
 
 
 class TagsView(ListModelMixin, RetrieveModelMixin, viewsets.GenericViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
+
+
+class IngredientsView(ListModelMixin, RetrieveModelMixin,
+                      viewsets.GenericViewSet):
+    serializer_class = RecipeIngredientReadSerializer
+    queryset = Ingredient.objects.all()
 
 
 class UserViewSet(viewsets.ModelViewSet):

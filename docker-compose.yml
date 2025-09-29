@@ -1,0 +1,22 @@
+volumes:
+  static:
+  media:
+
+services:
+#  backend:
+#    image: naick/foodgram_backend
+#    volumes:
+#      - static:/backend_static
+#      - media:/media
+  frontend:
+    image: naick/foodgram_frontend
+    command: cp -r /app/build/. /frontend_static/
+    volumes:
+      - static:/frontend_static
+  gateway:
+    image: naick/foodgram_gateway
+    ports:
+      - 8000:80
+    volumes:
+      - static:/staticfiles
+      - media:/media
