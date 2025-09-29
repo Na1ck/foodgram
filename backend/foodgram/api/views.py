@@ -1,3 +1,5 @@
+from django.http import HttpResponse
+from django.db.models import Sum
 from rest_framework import viewsets
 from rest_framework import status
 from rest_framework.mixins import (ListModelMixin, CreateModelMixin,
@@ -10,7 +12,8 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated
 
 from users.models import User
-from .models import Recipe, Tag, Ingredient, Favorite, ShoppingCart
+from .models import (Recipe, Tag, Ingredient, Favorite,
+                     ShoppingCart, RecipeIngredient)
 from .serializers import (RecipesSerializer,
                           ShortRecipeSerializer,
                           TagSerializer,
@@ -100,6 +103,67 @@ class RecipesView(ListModelMixin, RetrieveModelMixin,
                 {"detail": "Рецепт удален из списка покупок."},
                 status=status.HTTP_204_NO_CONTENT
             )
+
+    @action(
+        detail=False,
+        methods=['get'],
+        permission_classes=[IsAuthenticated],
+        url_path='download_shopping_cart'
+    )
+    def download_shopping_cart(self, request):
+        """
+        Скачать список покупок в виде TXT файла
+        GET /api/recipes/download_shopping_cart/
+        """
+        # Получаем все рецепты в корзине пользователя
+        user_cart = ShoppingCart.objects.filter(user=request.user)
+        recipes = [cart.recipe for cart in user_cart]
+
+        if not recipes:
+            return Response(
+                {"detail": "Корзина покупок пуста."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Собираем все ингредиенты с суммарным количеством
+        ingredients = RecipeIngredient.objects.filter(
+            recipe__in=recipes
+        ).values(
+            'ingredient__name',
+            'ingredient__measurement_unit'
+        ).annotate(
+            total_amount=Sum('amount')
+        ).order_by('ingredient__name')
+
+        # Формируем содержимое файла
+        shopping_list = []
+        shopping_list.append("Foodgram - Список покупок")
+        shopping_list.append("=" * 40)
+        shopping_list.append("")
+
+        for idx, ingredient in enumerate(ingredients, 1):
+            name = ingredient['ingredient__name']
+            unit = ingredient['ingredient__measurement_unit']
+            amount = ingredient['total_amount']
+            shopping_list.append(f"{idx}. {name} - {amount} {unit}")
+
+        shopping_list.append("")
+        shopping_list.append("=" * 40)
+        shopping_list.append(f"Всего позиций: {len(ingredients)}")
+        shopping_list.append(f"Рецептов: {len(recipes)}")
+        shopping_list.append("")
+        shopping_list.append("Приятных покупок!")
+
+        # Создаем HTTP response с файлом
+        file_content = '\n'.join(shopping_list)
+        response = HttpResponse(
+            file_content,
+            content_type='text/plain; charset=utf-8'
+        )
+        response['Content-Disposition'] = (
+            'attachment; filename="shopping_list.txt"')
+
+        return response
 
 
 class TagsView(ListModelMixin, RetrieveModelMixin, viewsets.GenericViewSet):
