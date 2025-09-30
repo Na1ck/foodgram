@@ -1,30 +1,24 @@
-from django.http import HttpResponse
-from django.db.models import Sum
-from rest_framework import viewsets
-from rest_framework import status
-from rest_framework.mixins import (ListModelMixin, CreateModelMixin,
-                                   RetrieveModelMixin, UpdateModelMixin,
-                                   DestroyModelMixin)
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from rest_framework.permissions import (IsAuthenticated)
-from django_filters.rest_framework import DjangoFilterBackend
-from django.shortcuts import get_object_or_404, redirect
-from rest_framework.decorators import api_view
-from djoser.views import UserViewSet as DjoserUserViewSet
 from django.contrib.auth import get_user_model
+from django.db.models import Sum
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404, redirect
+from django_filters.rest_framework import DjangoFilterBackend
+from djoser.views import UserViewSet as DjoserUserViewSet
+from rest_framework import status, viewsets
+from rest_framework.decorators import action, api_view
+from rest_framework.mixins import (CreateModelMixin, DestroyModelMixin,
+                                   ListModelMixin, RetrieveModelMixin,
+                                   UpdateModelMixin)
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
-from .models import (Recipe, Tag, Ingredient, Favorite,
-                     ShoppingCart, RecipeIngredient,
-                     Subscription)
-from .serializers import (RecipesSerializer,
-                          ShortRecipeSerializer,
-                          TagSerializer,
-                          IngredientsSerializer,
-                          UserSubscriptionSerializer,
-                          AvatarUpdateSerializer)
 from .filters import IngredientFilter, RecipeFilter
-from .permissions import IsAuthorOrAdmin, IsAuthenticatedForMe
+from .models import (Favorite, Ingredient, Recipe, RecipeIngredient,
+                     ShoppingCart, Subscription, Tag)
+from .permissions import IsAuthenticatedForMe, IsAuthorOrAdmin
+from .serializers import (AvatarUpdateSerializer, IngredientsSerializer,
+                          RecipesSerializer, ShortRecipeSerializer,
+                          TagSerializer, UserSubscriptionSerializer)
 
 User = get_user_model()
 
