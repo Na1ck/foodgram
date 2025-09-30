@@ -1,0 +1,36 @@
+from django_filters.rest_framework import (FilterSet, CharFilter,
+                                           NumberFilter,
+                                           AllValuesMultipleFilter)
+
+from .models import Ingredient, Recipe
+
+
+class IngredientFilter(FilterSet):
+    name = CharFilter(field_name='name', lookup_expr='istartswith')
+
+    class Meta:
+        model = Ingredient
+        fields = ['name']
+
+
+class RecipeFilter(FilterSet):
+    author = NumberFilter(field_name='author__id')
+    tags = AllValuesMultipleFilter(field_name='tags__slug')
+    is_favorited = NumberFilter(method='filter_is_favorited')
+    is_in_shopping_cart = NumberFilter(method='filter_is_in_shopping_cart')
+
+    class Meta:
+        model = Recipe
+        fields = ['author', 'tags', ]
+
+    def filter_is_favorited(self, queryset, name, value):
+        """Фильтрует только при is_favorited=1, при 0 - не фильтрует"""
+        if value == 1 and self.request.user.is_authenticated:
+            return queryset.filter(favorite__user=self.request.user)
+        return queryset
+
+    def filter_is_in_shopping_cart(self, queryset, name, value):
+        """Фильтрует только при is_in_shopping_cart=1, при 0 - не фильтрует"""
+        if value == 1 and self.request.user.is_authenticated:
+            return queryset.filter(shoppingcart__user=self.request.user)
+        return queryset
