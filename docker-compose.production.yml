@@ -13,8 +13,8 @@ services:
     image: naick/foodgram_backend
     env_file: .env
     volumes:
-      - static:/backend_static
-      - media:/media
+      - static:/app/backend_static
+      - media:/app/media
     depends_on:
       - db
   frontend:
@@ -29,7 +29,6 @@ services:
     ports:
       - ${HOST_PORT}:${CONTAINER_PORT}
     volumes:
-      - static:/backend_static
       - static:/staticfiles
       - media:/media
     depends_on:
