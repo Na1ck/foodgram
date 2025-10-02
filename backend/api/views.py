@@ -339,4 +339,4 @@ class UserViewSet(DjoserUserViewSet):
 def redirect_short_link(request, recipe_id):
     """Редирект с короткой ссылки на полный рецепт"""
     get_object_or_404(Recipe, id=recipe_id)
-    return redirect(f'/api/recipes/{recipe_id}/')
+    return redirect(f'/recipes/{recipe_id}/')
