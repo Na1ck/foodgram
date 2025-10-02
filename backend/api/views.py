@@ -1,9 +1,11 @@
 from django.contrib.auth import get_user_model
 from django.db.models import Sum
 from django.http import HttpResponse
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet as DjoserUserViewSet
+from django.http import HttpResponseRedirect
+from django.urls import reverse
 from rest_framework import status, viewsets
 from rest_framework.decorators import action, api_view
 from rest_framework.mixins import (CreateModelMixin, DestroyModelMixin,
@@ -331,6 +333,9 @@ class UserViewSet(DjoserUserViewSet):
 
 @api_view(['GET'])
 def redirect_short_link(request, recipe_id):
-    """Редирект с короткой ссылки на полный рецепт"""
+    """Редирект с короткой ссылки на полный рецепт."""
     get_object_or_404(Recipe, id=recipe_id)
-    return redirect(f'/recipes/{recipe_id}/')
+    full_recipe_url = request.build_absolute_uri(
+        reverse('recipes-detail', kwargs={'pk': recipe_id})
+    )
+    return HttpResponseRedirect(full_recipe_url)
