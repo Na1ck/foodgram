@@ -30,6 +30,7 @@ services:
       - ${HOST_PORT}:${CONTAINER_PORT}
     volumes:
       - static:/staticfiles
+      - static:/backend_static
       - media:/media
     depends_on:
       - backend
