@@ -1,6 +1,5 @@
 from django.utils import timezone
 from django.db import models
-from django.utils.text import slugify
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
@@ -11,11 +10,6 @@ class Tag(models.Model):
                             verbose_name='Название')
     slug = models.CharField(max_length=32, unique=True,
                             null=True, blank=True, verbose_name='Слаг')
-
-    def save(self, *args, **kwargs):
-        if not self.slug:
-            self.slug = slugify(self.name)
-        super().save(*args, **kwargs)
 
     class Meta:
         verbose_name = 'Тег'
