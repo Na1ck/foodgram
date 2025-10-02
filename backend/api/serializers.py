@@ -164,7 +164,7 @@ class RecipesSerializer(serializers.ModelSerializer):
             })
 
         for ing in ingredients_data:
-            if ing['amount'] < 1:
+            if int(ing['amount']) < 1:
                 raise serializers.ValidationError({
                     "ingredients": ["Ингредиентов должно быть больше 0"]
                 })
