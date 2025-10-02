@@ -137,7 +137,7 @@ class RecipesSerializer(serializers.ModelSerializer):
         tags_data = self.initial_data.get("tags", [])
         cooking_time_data = self.initial_data.get("cooking_time")
 
-        if cooking_time_data < 1:
+        if int(cooking_time_data) < 1:
             raise serializers.ValidationError({
                 "cooking_time": "Должно быть больше 1"
             })
