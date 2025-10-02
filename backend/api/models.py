@@ -1,3 +1,5 @@
+from django.utils import timezone
+from django.db import models
 from django.contrib.auth import get_user_model
 from django.db import models
 
@@ -9,9 +11,6 @@ class Tag(models.Model):
                             verbose_name='Название')
     slug = models.CharField(max_length=32, unique=True,
                             null=True, blank=True, verbose_name='Слаг')
-
-    def __str__(self):
-        return self.name
 
     class Meta:
         verbose_name = 'Тег'
@@ -75,6 +74,11 @@ class Recipe(models.Model):
     text = models.TextField(verbose_name='Описание')
     cooking_time = models.PositiveIntegerField(
         verbose_name='Время приготовления')
+    pub_date = models.DateTimeField(
+        default=timezone.now,
+        verbose_name='Дата публикации',
+        db_index=True
+    )
 
     def __str__(self):
         return self.name
@@ -82,6 +86,7 @@ class Recipe(models.Model):
     class Meta:
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
+        ordering = ['-pub_date']
 
 
 class Favorite(models.Model):
