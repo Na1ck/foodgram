@@ -1,11 +1,10 @@
 from django.contrib.auth import get_user_model
 from django.db.models import Sum
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
+from django.urls import reverse
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet as DjoserUserViewSet
-from django.http import HttpResponseRedirect
-from django.urls import reverse
 from rest_framework import status, viewsets
 from rest_framework.decorators import action, api_view
 from rest_framework.mixins import (CreateModelMixin, DestroyModelMixin,
