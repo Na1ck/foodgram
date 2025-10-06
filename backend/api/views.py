@@ -2,6 +2,7 @@ from django.http import HttpResponse
 from django.db.models import Sum
 from rest_framework import viewsets
 from rest_framework import status
+from rest_framework import filters
 from rest_framework.mixins import (ListModelMixin, CreateModelMixin,
                                    RetrieveModelMixin, UpdateModelMixin,
                                    DestroyModelMixin)
@@ -25,7 +26,7 @@ from .serializers import (RecipesSerializer,
                           IngredientsSerializer,
                           UserSubscriptionSerializer,
                           AvatarUpdateSerializer)
-from .filters import IngredientFilter, RecipeFilter
+from .filters import RecipeFilter
 from .permissions import IsAuthorOrAdmin, IsAuthenticatedForMe
 
 User = get_user_model()
@@ -199,8 +200,8 @@ class IngredientsView(ListModelMixin, RetrieveModelMixin,
     serializer_class = IngredientsSerializer
     queryset = Ingredient.objects.all()
     pagination_class = None
-    filter_backends = [DjangoFilterBackend]
-    filterset_class = IngredientFilter
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['name']
 
 
 class UserViewSet(DjoserUserViewSet):
