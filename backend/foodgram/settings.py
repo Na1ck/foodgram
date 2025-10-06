@@ -24,6 +24,9 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_filters',
     'djoser',
+    'ingredients',
+    'recipes',
+    'tags',
     'users',
     'api',
 ]

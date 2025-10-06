@@ -14,9 +14,11 @@ from rest_framework.decorators import api_view
 from djoser.views import UserViewSet as DjoserUserViewSet
 from django.contrib.auth import get_user_model
 
-from .models import (Recipe, Tag, Ingredient, Favorite,
-                     ShoppingCart, RecipeIngredient,
-                     Subscription)
+from recipes.models import (Recipe, Favorite,
+                            ShoppingCart, RecipeIngredient)
+from tags.models import Tag
+from ingredients.models import Ingredient
+from users.models import Subscription
 from .serializers import (RecipesSerializer,
                           ShortRecipeSerializer,
                           TagSerializer,

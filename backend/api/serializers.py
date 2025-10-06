@@ -6,8 +6,11 @@ from django.contrib.auth import authenticate
 from rest_framework import serializers
 from djoser.serializers import UserCreateSerializer
 
-from .models import (Recipe, Ingredient, RecipeIngredient, Tag, Favorite,
-                     ShoppingCart, Subscription)
+from recipes.models import (Recipe, Favorite,
+                            ShoppingCart, RecipeIngredient)
+from tags.models import Tag
+from ingredients.models import Ingredient
+from users.models import Subscription
 
 User = get_user_model()
 

@@ -4,35 +4,13 @@ from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
-
-class Tag(models.Model):
-    name = models.CharField(max_length=32, unique=True,
-                            verbose_name='Название')
-    slug = models.CharField(max_length=32, unique=True,
-                            null=True, blank=True, verbose_name='Слаг')
-
-    class Meta:
-        verbose_name = 'Тег'
-        verbose_name_plural = 'Теги'
-
-
-class Ingredient(models.Model):
-    name = models.CharField(max_length=128, verbose_name='Название')
-    measurement_unit = models.CharField(max_length=64,
-                                        verbose_name='Единица измерения')
-
-    def __str__(self):
-        return f"{self.name}, {self.measurement_unit}"
-
-    class Meta:
-        verbose_name = 'Ингредиент'
-        verbose_name_plural = 'Ингредиенты'
+MAX_LENGTH = 256
 
 
 class RecipeTag(models.Model):
     recipe = models.ForeignKey('Recipe', on_delete=models.CASCADE,
                                verbose_name='Рецепт')
-    tag = models.ForeignKey(Tag, on_delete=models.CASCADE,
+    tag = models.ForeignKey('tags.Tag', on_delete=models.CASCADE,
                             verbose_name='Тег')
 
     class Meta:
@@ -44,7 +22,8 @@ class RecipeTag(models.Model):
 class RecipeIngredient(models.Model):
     recipe = models.ForeignKey('Recipe', on_delete=models.CASCADE,
                                verbose_name='Рецепт')
-    ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE,
+    ingredient = models.ForeignKey('ingredients.Ingredient',
+                                   on_delete=models.CASCADE,
                                    verbose_name='Ингредиент')
     amount = models.PositiveIntegerField(verbose_name='Количество')
 
@@ -55,19 +34,19 @@ class RecipeIngredient(models.Model):
 
 
 class Recipe(models.Model):
-    tags = models.ManyToManyField(Tag, through='RecipeTag',
+    tags = models.ManyToManyField('tags.Tag', through='RecipeTag',
                                   verbose_name='Теги')
     author = models.ForeignKey(User, on_delete=models.CASCADE,
                                verbose_name='Автор',
                                related_name='recipes')
-    ingredients = models.ManyToManyField(Ingredient,
+    ingredients = models.ManyToManyField('ingredients.Ingredient',
                                          through='RecipeIngredient',
                                          verbose_name='Ингредиенты')
     is_favorited = models.BooleanField(default=False,
                                        verbose_name='В избранном')
     is_in_shopping_cart = models.BooleanField(default=False,
                                               verbose_name='В корзине')
-    name = models.CharField(max_length=256, verbose_name='Название')
+    name = models.CharField(max_length=MAX_LENGTH, verbose_name='Название')
     image = models.ImageField(upload_to='recipes/',
                               verbose_name='Изображение')
     text = models.TextField(verbose_name='Описание')
@@ -110,27 +89,3 @@ class ShoppingCart(models.Model):
         unique_together = ('user', 'recipe')
         verbose_name = 'Список покупок'
         verbose_name_plural = 'Список покупок'
-
-
-class Subscription(models.Model):
-    user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='follower',
-        verbose_name='Подписчик'
-    )
-    author = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='following',
-        verbose_name='Автор'
-    )
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        unique_together = ('user', 'author')
-        verbose_name = 'Подписка'
-        verbose_name_plural = 'Подписки'
-
-    def __str__(self):
-        return f'{self.user} подписан на {self.author}'
