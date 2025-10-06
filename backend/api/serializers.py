@@ -4,7 +4,7 @@ from django.core.files.base import ContentFile
 from django.contrib.auth import get_user_model
 from django.contrib.auth import authenticate
 from rest_framework import serializers
-from djoser.serializers import UserCreateSerializer
+from djoser.serializers import UserSerializer as DjoserUserSerializer
 
 from recipes.models import (Recipe, Favorite,
                             ShoppingCart, RecipeIngredient)
@@ -15,20 +15,11 @@ from users.models import Subscription
 User = get_user_model()
 
 
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ('id', 'username', 'first_name', 'last_name',
-                  'email', 'is_subscribed', 'avatar')
+class UserSerializer(DjoserUserSerializer):
+    is_subscribed = serializers.BooleanField(read_only=True)
 
-
-class UserCreateSerializer(UserCreateSerializer):
-    password = serializers.CharField(write_only=True, required=True)
-
-    class Meta(UserCreateSerializer.Meta):
-        model = User
-        fields = ('id', 'username', 'first_name',
-                  'last_name', 'email', 'password')
+    class Meta(DjoserUserSerializer.Meta):
+        fields = DjoserUserSerializer.Meta.fields + ('is_subscribed', 'avatar')
 
 
 class UserSubscriptionSerializer(serializers.ModelSerializer):
@@ -281,3 +272,11 @@ class AvatarUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['avatar']
+
+    def update(self, instance, validated_data):
+        if instance.avatar:
+            instance.avatar.delete(save=False)
+
+        instance.avatar = validated_data['avatar']
+        instance.save()
+        return instance

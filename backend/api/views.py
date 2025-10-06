@@ -274,43 +274,34 @@ class UserViewSet(DjoserUserViewSet):
         user = request.user
         serializer = AvatarUpdateSerializer(
             user,
-            data=request.data,
-            partial=False
+            data=request.data
         )
 
-        if request.method == 'PUT':
-            serializer = AvatarUpdateSerializer(
-                user,
-                data=request.data,
-                partial=False
-            )
-
-            if serializer.is_valid():
-                if user.avatar:
-                    user.avatar.delete(save=False)
-
-                serializer.save()
-                return Response(serializer.data, status=status.HTTP_200_OK)
-
-            return Response(serializer.errors,
-                            status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     @avatar.mapping.delete
-    def delete_avatar(self, request, pk=None):
+    def delete_avatar(self, request):
+        """
+        Удалить аватар пользователя
+        """
         user = request.user
-        if user.avatar:
-            user.avatar.delete(save=False)
-            user.avatar = None
-            user.save()
-            return Response(
-                {'message': 'Аватар успешно удален'},
-                status=status.HTTP_204_NO_CONTENT
-            )
-        else:
+
+        if not user.avatar:
             return Response(
                 {'error': 'Аватар не установлен'},
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+        user.avatar.delete(save=False)
+        user.avatar = None
+        user.save()
+
+        return Response(
+            {'message': 'Аватар успешно удален'},
+            status=status.HTTP_204_NO_CONTENT
+        )
 
 
 @api_view(['GET'])
