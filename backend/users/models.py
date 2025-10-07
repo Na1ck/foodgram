@@ -12,16 +12,19 @@ MAX_LENGTH = 150
 
 
 class User(AbstractUser):
-    email = models.EmailField(unique=True, verbose_name='Email')
+    email = models.EmailField(unique=True, verbose_name='Email', blank=False)
     username = models.CharField(
         max_length=MAX_LENGTH, unique=True,
         validators=[RegexValidator(
             r'^[\w.@+-]+\Z',
             'Имя пользователя должно соответствовать шаблону',
-        )]
+        )],
+        blank=False
     )
-    first_name = models.CharField(max_length=MAX_LENGTH, verbose_name='Имя')
-    last_name = models.CharField(max_length=MAX_LENGTH, verbose_name='Фамилия')
+    first_name = models.CharField(max_length=MAX_LENGTH, blank=False,
+                                  verbose_name='Имя')
+    last_name = models.CharField(max_length=MAX_LENGTH, blank=False,
+                                 verbose_name='Фамилия')
     avatar = models.ImageField(
         upload_to='users/avatars/',
         blank=True,

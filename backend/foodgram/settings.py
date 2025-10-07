@@ -123,6 +123,7 @@ DJOSER = {
     },
     'SERIALIZERS': {
         'user': 'api.serializers.UserSerializer',
+        'user_create': 'djoser.serializers.UserCreateSerializer',
         'current_user': 'api.serializers.UserSerializer',
         'token_create': 'api.serializers.AuthTokenSerializer',
     },

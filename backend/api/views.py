@@ -26,7 +26,7 @@ from .serializers import (RecipesSerializer,
                           UserSubscriptionSerializer,
                           AvatarUpdateSerializer)
 from .filters import RecipeFilter
-from .permissions import IsAuthorOrAdminOrReadOnly, IsAuthenticatedForMe
+from .permissions import IsAuthorOrAdminOrReadOnly
 from .utils import generate_shopping_list
 
 User = get_user_model()
@@ -176,7 +176,6 @@ class IngredientsView(ListModelMixin, RetrieveModelMixin,
 
 
 class UserViewSet(DjoserUserViewSet):
-    permission_classes = [IsAuthenticatedForMe]
 
     @action(
         detail=False,
