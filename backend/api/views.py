@@ -5,7 +5,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet as DjoserUserViewSet
 from ingredients.models import Ingredient
 from recipes.models import Favorite, Recipe, ShoppingCart
-from rest_framework import filters, status, viewsets
+from rest_framework import status, viewsets
 from rest_framework.decorators import action, api_view
 from rest_framework.mixins import (CreateModelMixin, DestroyModelMixin,
                                    ListModelMixin, RetrieveModelMixin,
@@ -15,7 +15,7 @@ from rest_framework.response import Response
 from tags.models import Tag
 from users.models import Subscription
 
-from .filters import RecipeFilter
+from .filters import RecipeFilter, IngredientFilter
 from .permissions import IsAuthorOrAdminOrReadOnly
 from .serializers import (AvatarUpdateSerializer, IngredientsSerializer,
                           RecipeReadSerializer, RecipeWriteSerializer,
@@ -180,7 +180,7 @@ class IngredientsView(ListModelMixin, RetrieveModelMixin,
     serializer_class = IngredientsSerializer
     queryset = Ingredient.objects.all()
     pagination_class = None
-    filter_backends = [filters.SearchFilter]
+    filter_backends = [IngredientFilter]
     search_fields = ['name']
 
 

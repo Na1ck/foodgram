@@ -1,8 +1,13 @@
 from django_filters.rest_framework import (BooleanFilter, FilterSet,
                                            ModelMultipleChoiceFilter,
                                            NumberFilter)
+from rest_framework import filters
 from recipes.models import Recipe
 from tags.models import Tag
+
+
+class IngredientFilter(filters.SearchFilter):
+    search_param = 'name'
 
 
 class RecipeFilter(FilterSet):
