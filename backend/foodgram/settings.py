@@ -138,5 +138,8 @@ SIMPLE_JWT = {
 
 AUTH_USER_MODEL = 'users.User'
 
-ALLOWED_HOSTS = ['*']  # для разработки
-CSRF_TRUSTED_ORIGINS = ['http://localhost:9000', 'http://127.0.0.1:9000']
+CSRF_TRUSTED_ORIGINS = os.getenv('DJANGO_CSRF_TRUSTED_ORIGINS', '').split(',')
+
+CORS_ORIGIN_WHITELIST = [ 
+    'http://localhost:3000' 
+]
