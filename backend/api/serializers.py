@@ -2,10 +2,9 @@ from django.contrib.auth import authenticate, get_user_model
 from djoser.serializers import UserCreateSerializer
 from djoser.serializers import UserSerializer as DjoserUserSerializer
 from drf_extra_fields.fields import Base64ImageField
-from rest_framework import serializers
-
 from ingredients.models import Ingredient
 from recipes.models import Favorite, Recipe, RecipeIngredient, ShoppingCart
+from rest_framework import serializers
 from tags.models import Tag
 from users.models import Subscription
 
