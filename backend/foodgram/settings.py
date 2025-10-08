@@ -24,6 +24,9 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_filters',
     'djoser',
+    'ingredients',
+    'recipes',
+    'tags',
     'users',
     'api',
 ]
@@ -59,8 +62,12 @@ WSGI_APPLICATION = 'foodgram.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv('POSTGRES_DB', 'django'),
+        'USER': os.getenv('POSTGRES_USER', 'django'),
+        'PASSWORD': os.getenv('POSTGRES_PASSWORD', ''),
+        'HOST': os.getenv('DB_HOST', 'db'),
+        'PORT': os.getenv('DB_PORT', 5432)
     }
 }
 
@@ -87,12 +94,11 @@ USE_I18N = True
 
 USE_TZ = True
 
-STATIC_URL = '/static/'
-
-STATIC_ROOT = BASE_DIR / 'static_backend'
+STATIC_URL = '/backend_static/'
+STATIC_ROOT = '/app/backend_static/'
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_ROOT = '/app/media/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -121,8 +127,8 @@ DJOSER = {
     'SERIALIZERS': {
         'user': 'api.serializers.UserSerializer',
         'current_user': 'api.serializers.UserSerializer',
+        'user_create': 'api.serializers.UserSerializer',
         'token_create': 'api.serializers.AuthTokenSerializer',
-        'user_create': 'api.serializers.UserCreateSerializer',
     },
 }
 
@@ -132,8 +138,5 @@ SIMPLE_JWT = {
 
 AUTH_USER_MODEL = 'users.User'
 
-CSRF_TRUSTED_ORIGINS = os.getenv('DJANGO_CSRF_TRUSTED_ORIGINS', '').split(',')
-
-CORS_ORIGIN_WHITELIST = [
-    'http://localhost:3000'
-]
+ALLOWED_HOSTS = ['*']  # для разработки
+CSRF_TRUSTED_ORIGINS = ['http://localhost:9000', 'http://127.0.0.1:9000']
