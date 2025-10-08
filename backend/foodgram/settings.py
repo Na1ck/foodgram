@@ -115,7 +115,7 @@ REST_FRAMEWORK = {
 
 DJOSER = {
     'PERMISSIONS': {
-        'user': ['rest_framework.permissions.IsAuthenticated'],
+        'user': ['rest_framework.permissions.AllowAny'],
         'user_list': ['rest_framework.permissions.AllowAny'],
         'user_create': ['rest_framework.permissions.AllowAny'],
         'user_delete': ['djoser.permissions.CurrentUserOrAdmin'],
@@ -123,7 +123,6 @@ DJOSER = {
     },
     'SERIALIZERS': {
         'user': 'api.serializers.UserSerializer',
-        'user_create': 'djoser.serializers.UserCreateSerializer',
         'current_user': 'api.serializers.UserSerializer',
         'token_create': 'api.serializers.AuthTokenSerializer',
     },
@@ -135,6 +134,5 @@ SIMPLE_JWT = {
 
 AUTH_USER_MODEL = 'users.User'
 
-CORS_ORIGIN_WHITELIST = [
-    'http://localhost:3000'
-]
+ALLOWED_HOSTS = ['*']  # для разработки
+CSRF_TRUSTED_ORIGINS = ['http://localhost:9000', 'http://127.0.0.1:9000']

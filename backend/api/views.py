@@ -38,7 +38,7 @@ class RecipesView(ListModelMixin, RetrieveModelMixin,
                   viewsets.GenericViewSet):
     queryset = Recipe.objects.all()
     permission_classes = [IsAuthorOrAdminOrReadOnly]
-    serializer_class = RecipesSerializer
+    serializer_class = [RecipesSerializer, ShortRecipeSerializer]
     filter_backends = [DjangoFilterBackend]
     filterset_class = RecipeFilter
 
@@ -62,7 +62,7 @@ class RecipesView(ListModelMixin, RetrieveModelMixin,
 
         Favorite.objects.create(user=request.user, recipe=recipe)
         serializer = ShortRecipeSerializer(recipe,
-                                           context={'request': request})
+                                           context={'request': request}) # !
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @favorite.mapping.delete
@@ -99,7 +99,7 @@ class RecipesView(ListModelMixin, RetrieveModelMixin,
 
         ShoppingCart.objects.create(user=request.user, recipe=recipe)
         serializer = ShortRecipeSerializer(recipe,
-                                           context={'request': request})
+                                           context={'request': request}) # !
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @shopping_cart.mapping.delete
@@ -197,14 +197,14 @@ class UserViewSet(DjoserUserViewSet):
                 page,
                 many=True,
                 context={'request': request}
-            )
+            ) # !
             return self.get_paginated_response(serializer.data)
 
         serializer = UserSubscriptionSerializer(
             subscribed_authors,
             many=True,
             context={'request': request}
-        )
+        ) # !
         return Response(serializer.data)
 
     @action(
@@ -234,7 +234,7 @@ class UserViewSet(DjoserUserViewSet):
             serializer = UserSubscriptionSerializer(
                 author,
                 context={'request': request}
-            )
+            ) # !
             return Response(serializer.data,
                             status=status.HTTP_201_CREATED)
         else:
@@ -274,7 +274,7 @@ class UserViewSet(DjoserUserViewSet):
         serializer = AvatarUpdateSerializer(
             user,
             data=request.data
-        )
+        ) # !
 
         serializer.is_valid(raise_exception=True)
         serializer.save()

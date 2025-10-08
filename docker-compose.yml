@@ -1,0 +1,45 @@
+# docker-compose.yml
+version: '3.8'
+
+volumes:
+  pg_data:
+  static:
+  media:
+
+services:
+  db:
+    image: postgres:13
+    env_file: .env
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+  
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    env_file: .env
+    volumes:
+      - static:/app/backend_static
+      - media:/app/media
+    command: python manage.py runserver 0.0.0.0:8000
+    depends_on:
+      - db
+  
+  frontend:
+    build: 
+      context: ./frontend  # или где у вас фронтенд
+      dockerfile: Dockerfile
+    volumes:
+      - static:/frontend_static
+  
+  gateway:
+    image: nginx:alpine
+    ports:
+      - "9000:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - static:/staticfiles
+      - static:/collected_static
+      - media:/media
+    depends_on:
+      - backend
