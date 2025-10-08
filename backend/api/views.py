@@ -1,31 +1,27 @@
+from django.contrib.auth import get_user_model
 from django.http import HttpResponse
-from rest_framework import viewsets
-from rest_framework import status
-from rest_framework import filters
-from rest_framework.mixins import (ListModelMixin, CreateModelMixin,
-                                   RetrieveModelMixin, UpdateModelMixin,
-                                   DestroyModelMixin)
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from rest_framework.permissions import (IsAuthenticated)
+from django.shortcuts import get_object_or_404, redirect
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet as DjoserUserViewSet
-from django.contrib.auth import get_user_model
+from rest_framework import filters, status, viewsets
+from rest_framework.decorators import action, api_view
+from rest_framework.mixins import (CreateModelMixin, DestroyModelMixin,
+                                   ListModelMixin, RetrieveModelMixin,
+                                   UpdateModelMixin)
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
-from recipes.models import (Recipe, Favorite,
-                            ShoppingCart)
-from tags.models import Tag
 from ingredients.models import Ingredient
+from recipes.models import Favorite, Recipe, ShoppingCart
+from tags.models import Tag
 from users.models import Subscription
-from .serializers import (RecipeReadSerializer,
-                          RecipeWriteSerializer,
-                          ShortRecipeSerializer,
-                          TagSerializer,
-                          IngredientsSerializer,
-                          UserSubscriptionSerializer,
-                          AvatarUpdateSerializer)
+
 from .filters import RecipeFilter
 from .permissions import IsAuthorOrAdminOrReadOnly
+from .serializers import (AvatarUpdateSerializer, IngredientsSerializer,
+                          RecipeReadSerializer, RecipeWriteSerializer,
+                          ShortRecipeSerializer, TagSerializer,
+                          UserSubscriptionSerializer)
 from .utils import generate_shopping_list
 
 User = get_user_model()
@@ -328,9 +324,6 @@ class UserViewSet(DjoserUserViewSet):
 
 @api_view(['GET'])
 def redirect_short_link(request, recipe_id):
-    """Редирект с короткой ссылки на полный рецепт."""
+    """Редирект с короткой ссылки на полный рецепт"""
     get_object_or_404(Recipe, id=recipe_id)
-    full_recipe_url = request.build_absolute_uri(
-        reverse('recipes-detail', kwargs={'pk': recipe_id})
-    )
-    return HttpResponseRedirect(full_recipe_url)
+    return redirect(f'/recipes/{recipe_id}/')
