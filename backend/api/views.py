@@ -49,6 +49,8 @@ class RecipesView(ListModelMixin, RetrieveModelMixin,
         'update': RecipeWriteSerializer,
         'partial_update': RecipeWriteSerializer,
         'destroy': RecipeReadSerializer,
+        'favorite': ShortRecipeSerializer,
+        'shopping_cart': ShortRecipeSerializer,
     }
 
     def get_serializer_class(self):
@@ -77,8 +79,7 @@ class RecipesView(ListModelMixin, RetrieveModelMixin,
             )
 
         Favorite.objects.create(user=request.user, recipe=recipe)
-        serializer = ShortRecipeSerializer(recipe,
-                                           context={'request': request}) # !
+        serializer = self.get_serializer(recipe)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @favorite.mapping.delete
@@ -114,8 +115,7 @@ class RecipesView(ListModelMixin, RetrieveModelMixin,
             )
 
         ShoppingCart.objects.create(user=request.user, recipe=recipe)
-        serializer = ShortRecipeSerializer(recipe,
-                                           context={'request': request}) # !
+        serializer = self.get_serializer(recipe)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @shopping_cart.mapping.delete
@@ -192,6 +192,20 @@ class IngredientsView(ListModelMixin, RetrieveModelMixin,
 
 
 class UserViewSet(DjoserUserViewSet):
+    serializer_action_classes = {
+        'subscriptions': UserSubscriptionSerializer,
+        'subscribe': UserSubscriptionSerializer,
+        'avatar': AvatarUpdateSerializer,
+    }
+
+    def get_serializer_class(self):
+        """
+        Выбор сериализатора в зависимости от выполняемого действия.
+        """
+        return self.serializer_action_classes.get(
+            self.action,
+            super().get_serializer_class()
+        )
 
     @action(
         detail=False,
@@ -209,18 +223,16 @@ class UserViewSet(DjoserUserViewSet):
 
         page = self.paginate_queryset(subscribed_authors)
         if page is not None:
-            serializer = UserSubscriptionSerializer(
+            serializer = self.get_serializer(
                 page,
-                many=True,
-                context={'request': request}
-            ) # !
+                many=True
+            )
             return self.get_paginated_response(serializer.data)
 
-        serializer = UserSubscriptionSerializer(
+        serializer = self.get_serializer(
             subscribed_authors,
-            many=True,
-            context={'request': request}
-        ) # !
+            many=True
+        )
         return Response(serializer.data)
 
     @action(
@@ -247,10 +259,7 @@ class UserViewSet(DjoserUserViewSet):
             author=author
         )
         if created:
-            serializer = UserSubscriptionSerializer(
-                author,
-                context={'request': request}
-            ) # !
+            serializer = self.get_serializer(author)
             return Response(serializer.data,
                             status=status.HTTP_201_CREATED)
         else:
@@ -287,10 +296,10 @@ class UserViewSet(DjoserUserViewSet):
         Обновить аватар пользователя
         """
         user = request.user
-        serializer = AvatarUpdateSerializer(
+        serializer = self.get_serializer(
             user,
             data=request.data
-        ) # !
+        )
 
         serializer.is_valid(raise_exception=True)
         serializer.save()

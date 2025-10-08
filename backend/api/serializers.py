@@ -41,7 +41,6 @@ class UserSubscriptionSerializer(UserSerializer):
         )
 
     def get_recipes(self, obj):
-        """Получаем рецепты автора с учётом лимита"""
         request = self.context.get('request')
         recipes = obj.recipes.all()
 
@@ -230,6 +229,8 @@ class ShortRecipeSerializer(serializers.ModelSerializer):
 
 
 class AuthTokenSerializer(serializers.Serializer):
+    """Кастомный сериализатор токена"""
+    # Поля у Djoser: username, password. А требуется Email вместо username
     email = serializers.EmailField()
     password = serializers.CharField(style={'input_type': 'password'})
 
@@ -242,12 +243,14 @@ class AuthTokenSerializer(serializers.Serializer):
             )
 
             if not authenticated_user:
-                raise serializers.ValidationError("Invalid credentials")
+                raise serializers.ValidationError(
+                    "Неправильный email или пароль")
 
             self.user = authenticated_user
             return attrs
         except User.DoesNotExist:
-            raise serializers.ValidationError("Invalid2 credentials")
+            raise serializers.ValidationError(
+                "Неправильный email или пароль")
 
 
 class AvatarUpdateSerializer(serializers.ModelSerializer):
