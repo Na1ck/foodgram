@@ -272,9 +272,9 @@ class AuthTokenSerializer(serializers.Serializer):
             )
 
             if not authenticated_user:
-                raise serializers.ValidationError("Invalid credentials")
+                raise serializers.ValidationError("Email или пароль неверные")
 
             self.user = authenticated_user
             return attrs
         except User.DoesNotExist:
-            raise serializers.ValidationError("Invalid2 credentials")
+            raise serializers.ValidationError("Email или пароль неверные")
