@@ -19,7 +19,8 @@ from recipes.models import (Recipe, Favorite,
 from tags.models import Tag
 from ingredients.models import Ingredient
 from users.models import Subscription
-from .serializers import (RecipesSerializer,
+from .serializers import (RecipeReadSerializer,
+                          RecipeWriteSerializer,
                           ShortRecipeSerializer,
                           TagSerializer,
                           IngredientsSerializer,
@@ -38,9 +39,24 @@ class RecipesView(ListModelMixin, RetrieveModelMixin,
                   viewsets.GenericViewSet):
     queryset = Recipe.objects.all()
     permission_classes = [IsAuthorOrAdminOrReadOnly]
-    serializer_class = [RecipesSerializer, ShortRecipeSerializer]
     filter_backends = [DjangoFilterBackend]
     filterset_class = RecipeFilter
+
+    serializer_action_classes = {
+        'list': RecipeReadSerializer,
+        'retrieve': RecipeReadSerializer,
+        'create': RecipeWriteSerializer,
+        'update': RecipeWriteSerializer,
+        'partial_update': RecipeWriteSerializer,
+        'destroy': RecipeReadSerializer,
+    }
+
+    def get_serializer_class(self):
+        """
+        Выбор сериализатора в зависимости от выполняемого действия.
+        """
+        return self.serializer_action_classes.get(self.action,
+                                                  RecipeReadSerializer)
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
@@ -155,7 +171,7 @@ class RecipesView(ListModelMixin, RetrieveModelMixin,
         """
         recipe = self.get_object()
 
-        short_link = request.build_absolute_uri(f'/s/{recipe.id}/')
+        short_link = request.build_absolute_uri(f'/s/{recipe.id}')
 
         return Response({"short-link": short_link})
 
