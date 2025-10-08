@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth import authenticate
 from rest_framework import serializers
 from djoser.serializers import UserSerializer as DjoserUserSerializer
+from djoser.serializers import UserCreateSerializer
 
 from recipes.models import (Recipe, Favorite, ShoppingCart,
                             RecipeIngredient)
@@ -19,6 +20,37 @@ class UserSerializer(DjoserUserSerializer):
     class Meta(DjoserUserSerializer.Meta):
         fields = DjoserUserSerializer.Meta.fields + (
             'first_name', 'last_name', 'is_subscribed', 'avatar')
+
+
+class UserCreateSerializer(UserCreateSerializer):
+    "Кастомный сериализатор создания пользователя"
+    # поля Djoser: email, username, password. (игнорирует другие)
+    # Требуется к этому еще first_name, last_name.
+    # Аватар при регистрации задать нельзя.
+    # Поэтому я наследуюсь от djoser.serializers.UserCreateSerializer
+    # и использую кастомный сериализатор для регистрации.
+    password = serializers.CharField(write_only=True, required=True)
+
+    class Meta(UserCreateSerializer.Meta):
+        model = User
+        fields = ('id', 'username', 'first_name',
+                  'last_name', 'email', 'password')
+
+
+class AvatarUpdateSerializer(serializers.ModelSerializer):
+    avatar = Base64ImageField(required=True)
+
+    class Meta:
+        model = User
+        fields = ['avatar']
+
+    def update(self, instance, validated_data):
+        if instance.avatar:
+            instance.avatar.delete(save=False)
+
+        instance.avatar = validated_data['avatar']
+        instance.save()
+        return instance
 
 
 class UserSubscriptionSerializer(UserSerializer):
@@ -230,7 +262,7 @@ class ShortRecipeSerializer(serializers.ModelSerializer):
 
 class AuthTokenSerializer(serializers.Serializer):
     """Кастомный сериализатор токена"""
-    # Поля у Djoser: username, password. А требуется Email вместо username
+    # Поля Djoser: username, password. А требуется Email вместо username
     email = serializers.EmailField()
     password = serializers.CharField(style={'input_type': 'password'})
 
@@ -243,27 +275,9 @@ class AuthTokenSerializer(serializers.Serializer):
             )
 
             if not authenticated_user:
-                raise serializers.ValidationError(
-                    "Неправильный email или пароль")
+                raise serializers.ValidationError("Invalid credentials")
 
             self.user = authenticated_user
             return attrs
         except User.DoesNotExist:
-            raise serializers.ValidationError(
-                "Неправильный email или пароль")
-
-
-class AvatarUpdateSerializer(serializers.ModelSerializer):
-    avatar = Base64ImageField(required=True)
-
-    class Meta:
-        model = User
-        fields = ['avatar']
-
-    def update(self, instance, validated_data):
-        if instance.avatar:
-            instance.avatar.delete(save=False)
-
-        instance.avatar = validated_data['avatar']
-        instance.save()
-        return instance
+            raise serializers.ValidationError("Invalid2 credentials")
