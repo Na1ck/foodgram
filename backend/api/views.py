@@ -181,7 +181,7 @@ class IngredientsView(ListModelMixin, RetrieveModelMixin,
     queryset = Ingredient.objects.all()
     pagination_class = None
     filter_backends = [IngredientFilter]
-    search_fields = ['name']
+    search_fields = ['^name']
 
 
 class UserViewSet(DjoserUserViewSet):
@@ -262,7 +262,7 @@ class UserViewSet(DjoserUserViewSet):
             )
 
     @subscribe.mapping.delete
-    def delete_subscribe(self, request, pk=None):
+    def delete_subscribe(self, request, id=None):
         author = self.get_object()
         user = request.user
         deleted_count, _ = Subscription.objects.filter(

@@ -138,7 +138,7 @@ SIMPLE_JWT = {
 
 AUTH_USER_MODEL = 'users.User'
 
-# CSRF_TRUSTED_ORIGINS = os.getenv('DJANGO_CSRF_TRUSTED_ORIGINS', '').split(',')
+CSRF_TRUSTED_ORIGINS = os.getenv('DJANGO_CSRF_TRUSTED_ORIGINS', '').split(',')
 
 CORS_ORIGIN_WHITELIST = [ 
     'http://localhost:3000' 

@@ -29,7 +29,6 @@ class User(AbstractUser):
         null=True,
         verbose_name='Аватар'
     )
-    is_subscribed = models.BooleanField(default=False, verbose_name='Подписка')
 
     class Meta:
         ordering = ['id']
