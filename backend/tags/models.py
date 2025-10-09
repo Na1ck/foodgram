@@ -9,6 +9,9 @@ class Tag(models.Model):
     slug = models.CharField(max_length=MAX_LENGTH, unique=True,
                             null=True, blank=True, verbose_name='Слаг')
 
+    def __str__(self):
+        return self.name
+
     class Meta:
         verbose_name = 'Тег'
         verbose_name_plural = 'Теги'
