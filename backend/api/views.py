@@ -200,6 +200,18 @@ class UserViewSet(DjoserUserViewSet):
             super().get_serializer_class()
         )
 
+    def get_permissions(self):
+        """
+        Переопределяем permissions:
+        - Для эндпоинта 'me' - только аутентифицированные пользователи
+        - Для остальных действий (retrieve, list) - разрешаем всем
+        """
+        if self.action == 'me':
+            # /users/me - только для аутентифицированных
+            self.permission_classes = [IsAuthenticated]
+
+        return super().get_permissions()
+
     @action(
         detail=False,
         methods=['get'],
