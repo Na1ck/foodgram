@@ -15,8 +15,8 @@ class UserSerializer(DjoserUserSerializer):
     is_subscribed = serializers.SerializerMethodField()
 
     class Meta(DjoserUserSerializer.Meta):
-        fields = DjoserUserSerializer.Meta.fields + (
-            'first_name', 'last_name', 'is_subscribed', 'avatar')
+        fields = ('id', 'username', 'first_name', 'last_name',
+                  'email', 'is_subscribed', 'avatar')
 
     def get_is_subscribed(self, obj):
         request = self.context.get('request')
@@ -30,11 +30,6 @@ class UserSerializer(DjoserUserSerializer):
 
 class UserCreateSerializer(UserCreateSerializer):
     "Кастомный сериализатор создания пользователя"
-    # поля Djoser: email, username, password. (игнорирует другие)
-    # Требуется к этому еще first_name, last_name.
-    # Аватар при регистрации задать нельзя.
-    # Поэтому я наследуюсь от djoser.serializers.UserCreateSerializer
-    # и использую кастомный сериализатор для регистрации.
     password = serializers.CharField(write_only=True, required=True)
 
     class Meta(UserCreateSerializer.Meta):
@@ -142,7 +137,7 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         required=True
     )
     ingredients = RecipeIngredientWriteSerializer(many=True)
-    image = Base64ImageField(required=True)
+    image = Base64ImageField(required=True, allow_null=False)
     cooking_time = serializers.IntegerField(
         required=True,
         min_value=1,
@@ -160,6 +155,11 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         model = Recipe
         fields = ('id', 'tags', 'ingredients',
                   'name', 'image', 'text', 'cooking_time')
+
+    def validate_image(self, value):
+        if value is None:
+            raise serializers.ValidationError("Поле image не может быть null")
+        return value
 
     def validate(self, attrs):
         ingredients_data = attrs.get("ingredients", [])
@@ -268,7 +268,6 @@ class ShortRecipeSerializer(serializers.ModelSerializer):
 
 class AuthTokenSerializer(serializers.Serializer):
     """Кастомный сериализатор токена"""
-    # Поля Djoser: username, password. А требуется Email вместо username
     email = serializers.EmailField()
     password = serializers.CharField(style={'input_type': 'password'})
 
