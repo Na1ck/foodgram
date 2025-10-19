@@ -24,11 +24,11 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_filters',
     'djoser',
-    'ingredients',
-    'recipes',
-    'tags',
-    'users',
-    'api',
+    'ingredients.apps.IngredientsConfig',
+    'recipes.apps.RecipesConfig',
+    'tags.apps.TagsConfig',
+    'users.apps.UsersConfig',
+    'api.apps.ApiConfig',
 ]
 
 MIDDLEWARE = [
@@ -60,15 +60,15 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'foodgram.wsgi.application'
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('POSTGRES_DB', 'django'),
-        'USER': os.getenv('POSTGRES_USER', 'django'),
-        'PASSWORD': os.getenv('POSTGRES_PASSWORD', ''),
-        'HOST': os.getenv('DB_HOST', 'db'),
-        'PORT': os.getenv('DB_PORT', 5432)
-    }
+DATABASES = { 
+    'default': { 
+        'ENGINE': 'django.db.backends.postgresql', 
+        'NAME': os.getenv('POSTGRES_DB', 'django'), 
+        'USER': os.getenv('POSTGRES_USER', 'django'), 
+        'PASSWORD': os.getenv('POSTGRES_PASSWORD', ''), 
+        'HOST': os.getenv('DB_HOST', 'db'), 
+        'PORT': os.getenv('DB_PORT', 5432) 
+    } 
 }
 
 AUTH_PASSWORD_VALIDATORS = [
