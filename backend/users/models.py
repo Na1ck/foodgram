@@ -18,7 +18,8 @@ class User(AbstractUser):
         validators=[RegexValidator(
             r'^[\w.@+-]+\Z',
             'Имя пользователя должно соответствовать шаблону',
-        )]
+        )],
+        verbose_name='Имя пользователя'
     )
     first_name = models.CharField(max_length=MAX_LENGTH,
                                   verbose_name='Имя')

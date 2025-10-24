@@ -1,8 +1,8 @@
 from django_filters.rest_framework import (BooleanFilter, FilterSet,
-                                           ModelMultipleChoiceFilter,
-                                           NumberFilter)
-from recipes.models import Recipe
+                                           ModelMultipleChoiceFilter)
 from rest_framework import filters
+
+from recipes.models import Recipe
 from tags.models import Tag
 
 
@@ -11,7 +11,6 @@ class IngredientFilter(filters.SearchFilter):
 
 
 class RecipeFilter(FilterSet):
-    author = NumberFilter(field_name='author__id')
     tags = ModelMultipleChoiceFilter(
         field_name='tags__slug',
         to_field_name='slug',

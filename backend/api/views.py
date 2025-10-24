@@ -3,15 +3,17 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet as DjoserUserViewSet
-from ingredients.models import Ingredient
-from recipes.models import Favorite, Recipe, ShoppingCart
 from rest_framework import status, viewsets
 from rest_framework.decorators import action, api_view
 from rest_framework.mixins import (CreateModelMixin, DestroyModelMixin,
                                    ListModelMixin, RetrieveModelMixin,
                                    UpdateModelMixin)
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import (IsAuthenticated,
+                                        IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
+
+from ingredients.models import Ingredient
+from recipes.models import Favorite, Recipe, ShoppingCart
 from tags.models import Tag
 from users.models import Subscription
 
@@ -31,7 +33,7 @@ class RecipesView(ListModelMixin, RetrieveModelMixin,
                   DestroyModelMixin,
                   viewsets.GenericViewSet):
     queryset = Recipe.objects.all()
-    permission_classes = [IsAuthorOrAdminOrReadOnly]
+    permission_classes = [IsAuthorOrAdminOrReadOnly, IsAuthenticatedOrReadOnly]
     filter_backends = [DjangoFilterBackend]
     filterset_class = RecipeFilter
 
@@ -56,76 +58,101 @@ class RecipesView(ListModelMixin, RetrieveModelMixin,
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
+    @staticmethod
+    def _handle_post_request(request, pk, model_class,
+                             exists_message, serializer_class=None):
+        """
+        Обработка POST запросов для добавления в связанные модели
+        """
+        recipe = get_object_or_404(Recipe, pk=pk)
+
+        if model_class.objects.filter(user=request.user,
+                                      recipe=recipe).exists():
+            return Response(
+                {"detail": exists_message},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        model_class.objects.create(user=request.user, recipe=recipe)
+
+        if serializer_class:
+            serializer = serializer_class(recipe)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(status=status.HTTP_201_CREATED)
+
+    @staticmethod
+    def _handle_delete_request(request, pk, model_class,
+                               not_exists_message, success_message):
+        """
+        Обработка DELETE запросов для удаления из связанных моделей
+        """
+        recipe = get_object_or_404(Recipe, pk=pk)
+        relation = model_class.objects.filter(user=request.user, recipe=recipe)
+
+        if not relation.exists():
+            return Response(
+                {"detail": not_exists_message},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        relation.delete()
+        return Response(
+            {"detail": success_message},
+            status=status.HTTP_204_NO_CONTENT
+        )
+
     @action(detail=True, methods=['post'],
             permission_classes=[IsAuthenticated])
     def favorite(self, request, pk=None):
         """
-        Добавление/удаление рецепта в избранное
+        Добавление рецепта в избранное
         """
-        recipe = self.get_object()
-
-        if Favorite.objects.filter(user=request.user,
-                                   recipe=recipe).exists():
-            return Response(
-                {"detail": "Рецепт уже в избранном."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        Favorite.objects.create(user=request.user, recipe=recipe)
-        serializer = self.get_serializer(recipe)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return self._handle_post_request(
+            request=request,
+            pk=pk,
+            model_class=Favorite,
+            exists_message="Рецепт уже в избранном.",
+            serializer_class=self.get_serializer
+        )
 
     @favorite.mapping.delete
     def delete_favorite(self, request, pk=None):
-        recipe = self.get_object()
-        favorite = Favorite.objects.filter(user=request.user,
-                                           recipe=recipe)
-        if not favorite.exists():
-            return Response(
-                {"detail": "Рецепт не был в избранном."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        favorite.delete()
-        return Response(
-            {"detail": "Рецепт удален из избранного."},
-            status=status.HTTP_204_NO_CONTENT
+        """
+        Удаление рецепта из избранного
+        """
+        return self._handle_delete_request(
+            request=request,
+            pk=pk,
+            model_class=Favorite,
+            not_exists_message="Рецепт не был в избранном.",
+            success_message="Рецепт удален из избранного."
         )
 
     @action(detail=True, methods=['post'],
             permission_classes=[IsAuthenticated])
     def shopping_cart(self, request, pk=None):
         """
-        Добавление/удаление рецепта в список покупок
+        Добавление рецепта в список покупок
         """
-        recipe = self.get_object()
-
-        if ShoppingCart.objects.filter(user=request.user,
-                                       recipe=recipe).exists():
-            return Response(
-                {"detail": "Рецепт уже в списке покупок."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        ShoppingCart.objects.create(user=request.user, recipe=recipe)
-        serializer = self.get_serializer(recipe)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return self._handle_post_request(
+            request=request,
+            pk=pk,
+            model_class=ShoppingCart,
+            exists_message="Рецепт уже в списке покупок.",
+            serializer_class=self.get_serializer
+        )
 
     @shopping_cart.mapping.delete
     def delete_shopping_cart(self, request, pk=None):
-        recipe = self.get_object()
-        favorite = ShoppingCart.objects.filter(user=request.user,
-                                               recipe=recipe)
-        if not favorite.exists():
-            return Response(
-                {"detail": "Рецепт не был в списке покупок."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        favorite.delete()
-        return Response(
-            {"detail": "Рецепт удален из списка покупок."},
-            status=status.HTTP_204_NO_CONTENT
+        """
+        Удаление рецепта из списка покупок
+        """
+        return self._handle_delete_request(
+            request=request,
+            pk=pk,
+            model_class=ShoppingCart,
+            not_exists_message="Рецепт не был в списке покупок.",
+            success_message="Рецепт удален из списка покупок."
         )
 
     @action(
@@ -267,11 +294,10 @@ class UserViewSet(DjoserUserViewSet):
             serializer = self.get_serializer(author)
             return Response(serializer.data,
                             status=status.HTTP_201_CREATED)
-        else:
-            return Response(
-                {'errors': 'Вы уже подписаны на этого пользователя'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        return Response(
+            {'errors': 'Вы уже подписаны на этого пользователя'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
     @subscribe.mapping.delete
     def delete_subscribe(self, request, id=None):
@@ -284,11 +310,11 @@ class UserViewSet(DjoserUserViewSet):
 
         if deleted_count:
             return Response(status=status.HTTP_204_NO_CONTENT)
-        else:
-            return Response(
-                {'errors': 'Вы не подписаны на этого пользователя'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+
+        return Response(
+            {'errors': 'Вы не подписаны на этого пользователя'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
     @action(
         detail=False,

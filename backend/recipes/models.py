@@ -1,10 +1,12 @@
 from django.contrib.auth import get_user_model
+from django.core.validators import MinValueValidator
 from django.db import models
 from django.utils import timezone
 
 User = get_user_model()
 
 MAX_LENGTH = 256
+MIN_VALUE = 1
 
 
 class RecipeTag(models.Model):
@@ -14,7 +16,12 @@ class RecipeTag(models.Model):
                             verbose_name='Тег')
 
     class Meta:
-        unique_together = ('recipe', 'tag')
+        constraints = [
+            models.UniqueConstraint(
+                fields=['recipe', 'tag'],
+                name='unique_recipe_tag'
+            )
+        ]
         verbose_name = 'Тег рецепта'
         verbose_name_plural = 'Теги рецептов'
 
@@ -25,10 +32,24 @@ class RecipeIngredient(models.Model):
     ingredient = models.ForeignKey('ingredients.Ingredient',
                                    on_delete=models.CASCADE,
                                    verbose_name='Ингредиент')
-    amount = models.PositiveIntegerField(verbose_name='Количество')
+    amount = models.PositiveIntegerField(
+        verbose_name='Количество',
+        validators=[
+            MinValueValidator(
+                MIN_VALUE,
+                message=('Количество ингредиента должно быть'
+                         f'не менее {MIN_VALUE}')
+            )
+        ]
+    )
 
     class Meta:
-        unique_together = ('recipe', 'ingredient')
+        constraints = [
+            models.UniqueConstraint(
+                fields=['recipe', 'ingredient'],
+                name='unique_recipe_ingredient'
+            )
+        ]
         verbose_name = 'Ингредиент рецепта'
         verbose_name_plural = 'Ингредиенты рецептов'
 
@@ -42,10 +63,6 @@ class Recipe(models.Model):
     ingredients = models.ManyToManyField('ingredients.Ingredient',
                                          through='RecipeIngredient',
                                          verbose_name='Ингредиенты')
-    is_favorited = models.BooleanField(default=False,
-                                       verbose_name='В избранном')
-    is_in_shopping_cart = models.BooleanField(default=False,
-                                              verbose_name='В корзине')
     name = models.CharField(max_length=MAX_LENGTH, verbose_name='Название')
     image = models.ImageField(upload_to='recipes/',
                               verbose_name='Изображение')
@@ -58,13 +75,13 @@ class Recipe(models.Model):
         db_index=True
     )
 
-    def __str__(self):
-        return self.name
-
     class Meta:
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
         ordering = ['-pub_date']
+
+    def __str__(self):
+        return self.name
 
 
 class Favorite(models.Model):
@@ -74,7 +91,12 @@ class Favorite(models.Model):
                                verbose_name='Рецепт')
 
     class Meta:
-        unique_together = ('user', 'recipe')
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'recipe'],
+                name='unique_user_recipe_favorite'
+            )
+        ]
         verbose_name = 'Избранный рецепт'
         verbose_name_plural = 'Избранные рецепты'
 
@@ -86,6 +108,11 @@ class ShoppingCart(models.Model):
                                verbose_name='Рецепт')
 
     class Meta:
-        unique_together = ('user', 'recipe')
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'recipe'],
+                name='unique_user_recipe_shopping_cart'
+            )
+        ]
         verbose_name = 'Список покупок'
         verbose_name_plural = 'Список покупок'
