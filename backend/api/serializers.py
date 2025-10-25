@@ -1,4 +1,4 @@
-from django.contrib.auth import get_user_model
+from django.contrib.auth import authenticate, get_user_model
 from djoser.serializers import UserCreateSerializer
 from djoser.serializers import UserSerializer as DjoserUserSerializer
 from drf_extra_fields.fields import Base64ImageField
@@ -267,3 +267,25 @@ class ShortRecipeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
         fields = ('id', 'name', 'image', 'cooking_time')
+
+
+class AuthTokenSerializer(serializers.Serializer):
+    """Кастомный сериализатор токена"""
+    email = serializers.EmailField()
+    password = serializers.CharField(style={'input_type': 'password'})
+
+    def validate(self, attrs):
+        try:
+            user = User.objects.get(email=attrs['email'])
+            authenticated_user = authenticate(
+                username=user.username,
+                password=attrs['password']
+            )
+
+            if not authenticated_user:
+                raise serializers.ValidationError("Email или пароль неверные")
+
+            self.user = authenticated_user
+            return attrs
+        except User.DoesNotExist:
+            raise serializers.ValidationError("Email или пароль неверные")
