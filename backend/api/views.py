@@ -3,6 +3,8 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet as DjoserUserViewSet
+from ingredients.models import Ingredient
+from recipes.models import Favorite, Recipe, ShoppingCart
 from rest_framework import status, viewsets
 from rest_framework.decorators import action, api_view
 from rest_framework.mixins import (CreateModelMixin, DestroyModelMixin,
@@ -11,9 +13,6 @@ from rest_framework.mixins import (CreateModelMixin, DestroyModelMixin,
 from rest_framework.permissions import (IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
-
-from ingredients.models import Ingredient
-from recipes.models import Favorite, Recipe, ShoppingCart
 from tags.models import Tag
 from users.models import Subscription
 
