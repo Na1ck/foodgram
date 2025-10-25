@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from djoser.serializers import UserSerializer as DjoserUserSerializer
+from djoser.serializers import UserCreateSerializer
 from drf_extra_fields.fields import Base64ImageField
 from ingredients.models import Ingredient
 from recipes.models import Favorite, Recipe, RecipeIngredient, ShoppingCart
@@ -29,6 +30,16 @@ class UserSerializer(DjoserUserSerializer):
                 author=obj
             ).exists()
         )
+
+
+class UserCreateSerializer(UserCreateSerializer):
+    "Кастомный сериализатор создания пользователя"
+    password = serializers.CharField(write_only=True, required=True)
+
+    class Meta(UserCreateSerializer.Meta):
+        model = User
+        fields = ('id', 'username', 'first_name',
+                  'last_name', 'email', 'password')
 
 
 class AvatarUpdateSerializer(serializers.ModelSerializer):
