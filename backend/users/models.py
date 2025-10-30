@@ -2,13 +2,7 @@ from django.contrib.auth.models import AbstractUser
 from django.core.validators import RegexValidator
 from django.db import models
 
-ROLE_CHOICES = [
-    ('user', 'User'),
-    ('moderator', 'Moderator'),
-    ('admin', 'Admin'),
-]
-
-MAX_LENGTH = 150
+from .constants import MAX_LENGTH
 
 
 class User(AbstractUser):
@@ -61,7 +55,7 @@ class Subscription(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=['useer', 'author'],
+                fields=['user', 'author'],
                 name='unique_user_author'
             )
         ]
