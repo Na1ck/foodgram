@@ -3,10 +3,9 @@ from django.core.validators import MinValueValidator
 from django.db import models
 from django.utils import timezone
 
-User = get_user_model()
+from .constants import MAX_LENGTH, MIN_VALUE
 
-MAX_LENGTH = 256
-MIN_VALUE = 1
+User = get_user_model()
 
 
 class RecipeTag(models.Model):

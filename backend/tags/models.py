@@ -1,6 +1,6 @@
 from django.db import models
 
-MAX_LENGTH = 32
+from .constants import MAX_LENGTH
 
 
 class Tag(models.Model):

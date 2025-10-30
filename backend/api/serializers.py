@@ -1,5 +1,4 @@
-from django.contrib.auth import authenticate, get_user_model
-from djoser.serializers import UserCreateSerializer
+from django.contrib.auth import get_user_model
 from djoser.serializers import UserSerializer as DjoserUserSerializer
 from drf_extra_fields.fields import Base64ImageField
 from ingredients.models import Ingredient
@@ -30,16 +29,6 @@ class UserSerializer(DjoserUserSerializer):
                 author=obj
             ).exists()
         )
-
-
-class UserCreateSerializer(UserCreateSerializer):
-    "Кастомный сериализатор создания пользователя"
-    password = serializers.CharField(write_only=True, required=True)
-
-    class Meta(UserCreateSerializer.Meta):
-        model = User
-        fields = ('id', 'username', 'first_name',
-                  'last_name', 'email', 'password')
 
 
 class AvatarUpdateSerializer(serializers.ModelSerializer):
@@ -217,15 +206,13 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         ingredients_data = validated_data.pop("ingredients", [])
         tags_data = validated_data.pop("tags", None)
 
-        if ingredients_data is not None:
-            RecipeIngredient.objects.filter(recipe=instance).delete()
-
-        instance = super().update(instance, validated_data)
+        RecipeIngredient.objects.filter(recipe=instance).delete()
 
         instance.tags.set(tags_data)
 
         self._process_ingredients(instance, ingredients_data)
 
+        instance = super().update(instance, validated_data)
         return instance
 
     def to_representation(self, instance):
@@ -267,25 +254,3 @@ class ShortRecipeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
         fields = ('id', 'name', 'image', 'cooking_time')
-
-
-class AuthTokenSerializer(serializers.Serializer):
-    """Кастомный сериализатор токена"""
-    email = serializers.EmailField()
-    password = serializers.CharField(style={'input_type': 'password'})
-
-    def validate(self, attrs):
-        try:
-            user = User.objects.get(email=attrs['email'])
-            authenticated_user = authenticate(
-                username=user.username,
-                password=attrs['password']
-            )
-
-            if not authenticated_user:
-                raise serializers.ValidationError("Email или пароль неверные")
-
-            self.user = authenticated_user
-            return attrs
-        except User.DoesNotExist:
-            raise serializers.ValidationError("Email или пароль неверные")
