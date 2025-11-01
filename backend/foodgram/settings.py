@@ -140,9 +140,8 @@ AUTH_USER_MODEL = 'users.User'
 
 if DEBUG:
     CSRF_TRUSTED_ORIGINS = os.getenv('DJANGO_CSRF_TRUSTED_ORIGINS', '').split(',')
+    CORS_ORIGIN_WHITELIST = [ 
+        'http://localhost:3000' 
+    ]
 else:
     CSRF_TRUSTED_ORIGINS = []
-
-CORS_ORIGIN_WHITELIST = [ 
-    'http://localhost:3000' 
-]
